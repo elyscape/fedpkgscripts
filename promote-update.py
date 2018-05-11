@@ -9,7 +9,7 @@ from bodhi.client.bindings import BodhiClient
 STATUSES = ['testing', 'batched', 'stable', 'obsolete', 'unpush', 'revoke']
 
 class UpdatePromoter(object):
-    def __init__(self, dry_run):
+    def __init__(self, dry_run=False):
         self._client = BodhiClient()
         self._client.init_username()
         self._dry_run = dry_run
