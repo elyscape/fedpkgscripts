@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# shellcheck source=./rpm-update
+. "$(dirname "${BASH_SOURCE[0]}")/rpm-update"
+
+_get_updates() {
+	bugzilla \
+		--ensure-logged-in \
+		query \
+		--savedsearch 'certbot updates' \
+		--outputformat '%{component},%{summary},%{id}'
+}
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	local -a buginfo
+
+	pushd "${HOME}/fedpkg/certbot" &>/dev/null
+
+	while IFS=, read -ra buginfo; do
+		echo
+		echo "${buginfo[0]}"
+
+		pushd "${buginfo[0]}" &>/dev/null
+		rpm_update "${buginfo[@]}"
+		popd &>/dev/null
+	done < <(_get_updates)
+
+	popd &>/dev/null
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"

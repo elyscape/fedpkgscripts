@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+_summary_to_version() {
+	local package="$1" summary="$2"
+
+	sed -E "s/${package}-(.*) is available/\\1/" <<<"$summary"
+}
+
+_handle_spectool_output() {
+	local package="$1" sourceline="$2"
+	local sourcefile
+
+	sourcefile="$(sed -e 's!.* \./!!' -e 's! already exists.*!!' <<<"$sourceline")"
+
+	fedpkg new-sources "$sourcefile"
+}
+
+rpm_update() {
+	local package="$1" newversion="$2" bugid="${3:-}"
+	local oldversion sourceline message
+
+	if [[ "$bugid" != '' ]]; then
+		newversion="$(_summary_to_version "$package" "$newversion")"
+	fi
+
+	git checkout -q master
+	git fetch -q
+	git merge --ff-only -q
+
+	oldversion="$(rpmspec -q --srpm --qf '%{version}' "${package}.spec" 2>/dev/null)"
+
+	echo "${oldversion} -> ${newversion}"
+
+	if [[ "$newversion" == "$oldversion" ]]; then
+		echo "Already up to date"
+		return
+	fi
+
+	message="Update to ${newversion}"
+	if [[ "$bugid" != '' ]]; then
+		message="${message} (#${bugid})"
+	fi
+
+	rpmdev-bumpspec -n "$newversion" -c "$message" "${package}.spec"
+
+	git add "${package}.spec"
+
+	spectool -g "${package}.spec"
+	while IFS= read -r sourceline; do
+		_handle_spectool_output "$package" "$sourceline"
+	done < <(spectool -g -n "${package}.spec" 2>/dev/null)
+
+	git commit -m "$message"
+}
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	if [[ "$#" -lt 2 ]]; then
+		echo 'Usage: rpm-update package version'
+		echo '  or:  rpm-update package bug-summary bug-id'
+		return 64
+	fi
+
+	rpm_update "$@"
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"

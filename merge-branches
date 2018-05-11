@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	for branch in f{27..28} epel7; do
+		mr -q mergemaster "$branch"
+	done
+
+	mr -q run git checkout master
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# shellcheck source=./rpm-update
+. "$(dirname "${BASH_SOURCE[0]}")/rpm-update"
+
+# shellcheck source=./update-certbot-packages
+. "$(dirname "${BASH_SOURCE[0]}")/update-certbot-packages"
+
+# shellcheck source=./create-bodhi-update
+. "$(dirname "${BASH_SOURCE[0]}")/create-bodhi-update"
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	local package summary bugid
+
+	pushd "${HOME}/fedpkg/certbot" &>/dev/null
+
+	while IFS=, read -r package summary bugid; do
+		for release in fc{27..28} el7; do
+			_create_update "$package" "$summary" "$release" "$bugid"
+		done
+	done < <(_get_updates)
+
+	popd "${HOME}/fedpkg/certbot" &>/dev/null
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"

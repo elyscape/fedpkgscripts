@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+_get_updates() {
+	local release="$1" package="${2:-}" status="${3:-testing}"
+	local -a options
+
+	options=(--mine --status "$status" --releases "$release")
+	if [[ -n "$package" ]]; then
+		options+=(--packages "$package")
+	fi
+
+	bodhi updates query "${options[@]}" |
+		sed -f <(cat <<-'SCRIPT'
+			/^[0-9]+ updates found/d # remove summary line
+			s/ .*// # strip update metadata
+		SCRIPT
+		)
+}
+
+_promote_update() {
+	local update="$1" newstatus="${2:-stable}"
+
+	echo "${update} - requesting ${newstatus}"
+	bodhi updates request "$update" "$newstatus" || :
+}
+
+_promote_updates() {
+	local release="$1" package="$2" oldstatus="${3:-testing}" newstatus="${4:-stable}"
+	local update
+
+	while IFS= read -r update; do
+		_promote_update "$update" "$newstatus"
+	done < <(_get_updates "$release" "$package" "$oldstatus")
+}
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	if [[ "$#" -lt 2 ]]; then
+		echo 'Usage: promote-update package release [status]'
+		return 64
+	fi
+
+	local package="$1" release="$2" status="${3-stable}"
+
+	_promote_updates "$release" "$package" testing "$status"
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"

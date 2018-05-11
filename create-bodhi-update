@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+# shellcheck source=./rpm-update
+. "$(dirname "${BASH_SOURCE[0]}")/rpm-update"
+
+# shellcheck source=./update-certbot-packages
+. "$(dirname "${BASH_SOURCE[0]}")/update-certbot-packages"
+
+_create_update() {
+	local package="$1" dist="$2" newversion="${3:-}" bugid="${4:-}"
+	local tmpdir release specfile closebugs='False'
+
+	tmpdir="$(mktemp -d)"
+	# shellcheck disable=SC2064
+	trap "rm -rf $tmpdir; trap - RETURN" RETURN
+
+	specfile="${package}/${package}.spec"
+
+	if [[ -z "$newversion" ]]; then
+		newversion="$(rpmspec -q --srpm --qf '%{version}' "$specfile" 2>/dev/null)"
+	elif [[ "$bugid" != '' ]] && [[ -n "$newversion" ]]; then
+		newversion="$(_summary_to_version "$package" "$newversion")"
+	fi
+
+	if [[ "$dist" == 'fc28' ]]; then
+		closebugs='True'
+	fi
+
+	release="$(rpmspec -q --srpm --qf '%{release}' -D "dist .${dist}" "$specfile" 2>/dev/null)"
+
+	cat >"${tmpdir}/bodhi.conf" <<-EOF
+	[ ${package}-${newversion}-${release} ]
+	type=enhancement
+	request=testing
+	notes=Update to ${newversion}.
+	autokarma=True
+	stable_karma=1
+	unstable_karma=-1
+	suggest_reboot=False
+	close_bugs=${closebugs}
+	EOF
+
+	if [[ "$bugid" != '' ]]; then
+		cat >>"${tmpdir}/bodhi.conf" <<-EOF
+		bugs=${bugid}
+		EOF
+	fi
+
+	bodhi updates new --file "${tmpdir}/bodhi.conf" "${package}-${newversion}-${release}"
+}
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	if [[ "$#" -lt 2 ]]; then
+		echo 'Usage: create-bodhi-update package dist [version]'
+		echo '  or:  create-bodhi-update package dist version bug-id'
+		return 64
+	fi
+
+	_create_update "$@"
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"
