@@ -31,6 +31,8 @@ class UpdatePromoter(object):
             if status in ['stable', 'batched'] and not update.meets_testing_requirements:
                 print('{}skipping {} - not eligible for {}'.format(self._log_prefix, update.title, status))
                 continue
+            if update.request == status:
+                continue
             self.promote_update(update, status)
 
     def get_updates(self, release, package=None, status='testing'):
