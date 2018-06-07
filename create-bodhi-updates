@@ -20,7 +20,7 @@ main() {
 
 	while IFS=, read -r package summary bugid; do
 		for release in fc{27..28} el7; do
-			_create_update "$package" "$summary" "$release" "$bugid"
+			_create_update "$package" "$release" "$summary" "$bugid"
 		done
 	done < <(_get_updates)
 
