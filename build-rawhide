@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+shopt -s extglob
+
+get_source() {
+	local package="$1"
+
+	fedpkg --path "$package" giturl
+}
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	local -a koji_args
+	local pkg
+
+	pushd "${HOME}/fedpkg/certbot" &>/dev/null
+
+	koji_args=()
+
+	koji_args+=("$(get_source ./python-acme/)" ':')
+	koji_args+=("$(get_source ./certbot/)" ':')
+
+	for pkg in ./!(python-acme|certbot)/; do
+		koji_args+=("$(get_source "$pkg")")
+	done
+
+	koji chain-build --nowait f29 "${koji_args[@]}"
+
+	popd &>/dev/null
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"
