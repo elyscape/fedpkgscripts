@@ -5,7 +5,7 @@ main() {
 
 	[[ "${TRACE:-}" != '' ]] && set -x
 
-	for branch in f{27..28} epel7; do
+	for branch in f{27..29} epel7; do
 		mr build "$branch"
 	done
 
