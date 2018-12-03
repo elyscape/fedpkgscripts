@@ -38,13 +38,8 @@ _create_update() {
 	unstable_karma=-1
 	suggest_reboot=False
 	close_bugs=${closebugs}
+	bugs=${bugid:-}
 	EOF
-
-	if [[ "$bugid" != '' ]]; then
-		cat >>"${tmpdir}/bodhi.conf" <<-EOF
-		bugs=${bugid}
-		EOF
-	fi
 
 	bodhi updates new --file "${tmpdir}/bodhi.conf" "${package}-${newversion}-${release}"
 }
