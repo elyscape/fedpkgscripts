@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+main() {
+	set -euo pipefail
+
+	[[ "${TRACE:-}" != '' ]] && set -x
+
+	fedpkg scratch-build --nowait --srpm
+	for rel in f{28..29} epel7; do
+		fedpkg --release "$rel" scratch-build --nowait --srpm
+	done
+}
+
+[[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"
