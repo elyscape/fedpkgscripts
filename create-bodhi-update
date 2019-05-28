@@ -22,7 +22,7 @@ _create_update() {
 		newversion="$(_summary_to_version "$package" "$newversion")"
 	fi
 
-	if [[ "$dist" == 'fc29' ]]; then
+	if [[ "$dist" == 'fc30' ]]; then
 		closebugs='True'
 	fi
 
