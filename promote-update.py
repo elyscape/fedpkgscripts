@@ -20,7 +20,7 @@ class UpdatePromoter(object):
     def promote_update(self, update, status='stable'):
         print('{}{} - requesting {}'.format(self._log_prefix, update.title, status))
         request_params = {
-                'update': update.title,
+                'update': update.alias,
                 'request': status,
             }
         if not self._dry_run:
