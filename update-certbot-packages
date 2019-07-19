@@ -4,6 +4,13 @@
 . "$(dirname "${BASH_SOURCE[0]}")/rpm-update"
 
 _get_updates() {
+	if [[ -n "${CERTBOT_VERSION:-}" ]]; then
+		for pkg in python-acme certbot python-certbot-apache python-certbot-dns-cloudflare python-certbot-dns-cloudxns python-certbot-dns-digitalocean python-certbot-dns-dnsimple python-certbot-dns-dnsmadeeasy python-certbot-dns-gehirn python-certbot-dns-google python-certbot-dns-linode python-certbot-dns-luadns python-certbot-dns-nsone python-certbot-dns-ovh python-certbot-dns-rfc2136 python-certbot-dns-route53 python-certbot-dns-sakuracloud python-certbot-nginx; do
+			echo "${pkg},${CERTBOT_VERSION}"
+		done
+		return
+	fi
+
 	bugzilla \
 		--ensure-logged-in \
 		query \
