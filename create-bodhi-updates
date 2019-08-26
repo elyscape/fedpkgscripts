@@ -19,7 +19,7 @@ main() {
 	pushd "${HOME}/fedpkg/certbot" &>/dev/null
 
 	while IFS=, read -r package summary bugid; do
-		for release in fc{29..31} el7; do
+		for release in fc{29..30} el7; do
 			_create_update "$package" "$release" "$summary" "$bugid"
 		done
 	done < <(_get_updates)
