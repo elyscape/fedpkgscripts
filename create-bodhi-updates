@@ -24,7 +24,7 @@ main() {
 		done
 	done < <(_get_updates)
 
-	popd "${HOME}/fedpkg/certbot" &>/dev/null
+	popd &>/dev/null
 }
 
 [[ "$0" == "${BASH_SOURCE[0]}" ]] && main "$@"
