@@ -27,7 +27,7 @@ main() {
 		koji_args+=("$(get_source "$pkg")")
 	done
 
-	koji chain-build --nowait f30 "${koji_args[@]}"
+	koji chain-build --nowait f32 "${koji_args[@]}"
 
 	popd &>/dev/null
 }
