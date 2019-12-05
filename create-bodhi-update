@@ -30,6 +30,7 @@ _create_update() {
 
 	cat >"${tmpdir}/bodhi.conf" <<-EOF
 	[ ${package}-${newversion}-${release} ]
+	display_name=${package}-${newversion}-${release}
 	type=enhancement
 	request=testing
 	notes=Update to ${newversion}.
