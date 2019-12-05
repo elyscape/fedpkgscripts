@@ -6,7 +6,7 @@ main() {
 	[[ "${TRACE:-}" != '' ]] && set -x
 
 	fedpkg scratch-build --nowait --srpm
-	for rel in f{29..31} epel7; do
+	for rel in f{30..31} epel7; do
 		fedpkg --release "$rel" scratch-build --nowait --srpm
 	done
 }
