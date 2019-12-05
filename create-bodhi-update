@@ -36,6 +36,7 @@ _create_update() {
 	autokarma=True
 	stable_karma=1
 	unstable_karma=-1
+	autotime=True
 	suggest_reboot=False
 	close_bugs=${closebugs}
 	bugs=${bugid:-}
