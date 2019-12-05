@@ -6,18 +6,9 @@ _summary_to_version() {
 	sed -E "s/${package}-(.*) is available/\\1/" <<<"$summary"
 }
 
-_handle_spectool_output() {
-	local package="$1" sourceline="$2"
-	local sourcefile
-
-	sourcefile="$(sed -e 's!.* \./!!' -e 's! already exists.*!!' <<<"$sourceline")"
-
-	fedpkg new-sources "$sourcefile"
-}
-
 rpm_update() {
 	local package="$1" newversion="$2" bugid="${3:-}"
-	local oldversion sourceline message
+	local oldversion message
 
 	if [[ "$bugid" != '' ]]; then
 		newversion="$(_summary_to_version "$package" "$newversion")"
@@ -46,9 +37,9 @@ rpm_update() {
 	git add "${package}.spec"
 
 	spectool -g "${package}.spec"
-	while IFS= read -r sourceline; do
-		_handle_spectool_output "$package" "$sourceline"
-	done < <(spectool -g -n "${package}.spec" 2>/dev/null)
+	spectool -g -n "${package}.spec" 2>/dev/null |
+		sed -e 's!Getting .* to \./!!' |
+		xargs echo fedpkg new-sources
 
 	git commit -m "$message"
 }
